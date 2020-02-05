@@ -46,130 +46,138 @@ const addDepartmentQuestions = [{
 const addRoleQuestions = [{
     type: "input",
     name: "id",
-    message: "What is your MySQL username?"
+    message: "What should their ID be?"
 },
 
 {
     type: "input",
     name: "title",
-    message: "What is your MySQL password?"
+    message: "What should their title be?"
 },
 {
     type: "input",
     name: "salary",
-    message: "What is your MySQL password?"
+    message: "What should their salary be?"
+},
+{
+    type: "input",
+    name: "department",
+    message: "What is the name of the department the role belongs to?"
 }]
 
 const addEmployeeQuestions = [{
     type: "input",
     name: "id",
-    message: "What is your MySQL username?"
+    message: "What should their ID be?"
 },
 
 {
     type: "input",
-    name: "title",
-    message: "What is your MySQL password?"
+    name: "first",
+    message: "What is their first name?"
 },
 {
     type: "input",
-    name: "salary",
-    message: "What is your MySQL password?"
+    name: "last",
+    message: "What is their last name?"
 },
 {
     type: "input",
-    name: "department",
-    message: "What is your MySQL password?"
-}]
+    name: "role",
+    message: "What is the name of their role?"
+},{
+    type: "input",
+    name: "manager",
+    message: "(optional) What is their manager's id?"
+}
+
+]
 
 const UpdateEmployeeRole = [{
     type: "input",
-    name: "username",
-    message: "What is your MySQL username?"
+    name: "id",
+    message: "What is the employee's id?"
 },
 
 {
     type: "input",
-    name: "password",
-    message: "What is your MySQL password?"
+    name: "role",
+    message: "What should their new role be?"
 }]
-
-const ContinueQuestion = {
-
-}
-
 
 let init = function(){
     inquirer.prompt(login).then(function(data){
-        const SQLConnection = mysql.createConnection({
+        const SQLConnectionData = {
             host: "localhost",
             user: data.username,
             password: data.password,
             database: "company_db"
-        });
+        }
+
 
         let SQLQuery = function(yourQuery){
-            SQLConnection.connect(function(err){
+            let connection = mysql.createConnection(SQLConnectionData);
+            connection.query(yourQuery, function(err, result){
                 if (err){
                     console.log(err)
                 }
                 else{
-                    SQLConnection.query(yourQuery, function(err, result){
-                        if (err){
-                            console.log(err)
-                        }
-                        else{
-                            console.table(result)
-                        }
-                    })
-                    SQLConnection.end()
+                    console.table(result)
+                    connection.end()
                 }
             })
         }
-
-       
-        inquirer.prompt(InitialQuestion).then(function(data){
-            switch(data.action){
-                case "View Departments":
-                    SQLQuery("select * FROM department")
-
-                break;
-
-                case "View Roles":
-                    SQLQuery("select * FROM roles")
-                    
-                break;
-
-                case "View Employees":
-                    SQLQuery("select * FROM employees")
-                break;
-
-                case "Add a Department":
-                    inquirer.prompt(addDepartmentQuestions).then(function(data){
-                        SQLQuery(tString`insert into department VALUES(${data.id}, ${data.department});`)
+        let restart = function(){
+            inquirer.prompt(InitialQuestion).then(function(data){
+                switch(data.action){
+                    case "View Departments":
+                        SQLQuery("select * FROM department")
+                        restart()
+    
+                    break;
+    
+                    case "View Roles":
+                        SQLQuery("select * FROM roles")
+                        restart()
                         
-                    });
-                break;
-
-                case "Add a Role":
-                    inquirer.prompt(addRoleQuestions).then(function(data){
-
-                    });
-                break;
-
-                case "Add an Employee":
-                    inquirer.prompt(addEmployeeQuestions).then(function(data){
-
-                    });
-                break;
-
-                case "Update an Employee's Role":
-                    inquirer.prompt(UpdateEmployeeRole).then(function(data){
-
-                    });
-                break;
+                    break;
+    
+                    case "View Employees":
+                        SQLQuery("select * FROM employees")
+                        restart()
+                    break;
+    
+                    case "Add a Department":
+                        inquirer.prompt(addDepartmentQuestions).then(function(data){
+                            SQLQuery(tString`insert into department VALUES(${data.id}, ${data.department});`)
+                            restart()
+                        });
+                    break;
+    
+                    case "Add a Role":
+                            
+                        inquirer.prompt(addRoleQuestions).then(function(data){
+                            SQLQuery(tString`select id from department where name = '${data.depName}' into @departmentVar; insert into roles VALUES('${data.id}', '${data.title}', '${data.salary}', @departmentVar)`)
+                            restart()
+                        });
+                    break;
+    
+                    case "Add an Employee":
+                        inquirer.prompt(addEmployeeQuestions).then(function(data){
+                            SQLQuery(tString`select id from roles where name = '${data.role}' into @rolesVar; insert into employees VALUES(${data.id}, '${data.first}', '${data.last}', @rolesVar,  '${data.manager}' );`)
+                            restart()
+                        });
+                    break;
+    
+                    case "Update an Employee's Role":
+                        inquirer.prompt(UpdateEmployeeRole).then(function(data){
+                            
+                        });
+                    break;
+                }
             }
-        })
+        )}
+    restart()
     })
 }
 
