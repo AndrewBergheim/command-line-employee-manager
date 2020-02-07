@@ -28,7 +28,6 @@ const login = [{
     message: "What is your MySQL password?"
 }]
 
-// setting up mysql connection
 
 
 //questions
@@ -46,18 +45,18 @@ const addDepartmentQuestions = [{
 const addRoleQuestions = [{
     type: "input",
     name: "id",
-    message: "What should their ID be?"
+    message: "What should the role ID be?"
 },
 
 {
     type: "input",
     name: "title",
-    message: "What should their title be?"
+    message: "What should the role title be?"
 },
 {
     type: "input",
     name: "salary",
-    message: "What should their salary be?"
+    message: "What should the role salary be?"
 },
 {
     type: "input",
@@ -102,10 +101,20 @@ const UpdateEmployeeRole = [{
 {
     type: "input",
     name: "role",
-    message: "What should their new role be?"
+    message: "What should their new role be (by ID)?"
 }]
 
-let init = function(){
+// allows time to search so the prompt doesn't show up first
+let QueryTimer = function(){
+    return new Promise(resolve =>{
+        setTimeout(function(){
+            resolve(null)
+        }, 1700)
+    })
+}
+
+
+let init = function(){// runs initial prompt then starts main loop
     inquirer.prompt(login).then(function(data){
         const SQLConnectionData = {
             host: "localhost",
@@ -115,41 +124,75 @@ let init = function(){
         }
 
 
-        let SQLQuery = function(yourQuery){
+    let SQLQuery = function(yourQuery, yourVars){
+        // create connection
+        let connection = mysql.createConnection(SQLConnectionData);
+        //query connection
+        connection.query(yourQuery, yourVars, function(err, result){
+            if (err){
+                console.log(err.code)
+                console.log("An error has occured. Check that your inputs were valid and that your username and password were inputted correctly")
+                console.log(err)
+            }
+            else{// log and close connection
+                console.log(" ")
+                console.table(result)
+                console.log("Operation Successful.")
+                connection.end()
+            }
+        })
+    }
+    
+
+        let SQLStaticQuery = function(yourQuery){
+            // create connection
             let connection = mysql.createConnection(SQLConnectionData);
+            //query connection
             connection.query(yourQuery, function(err, result){
                 if (err){
+                    console.log(err.code)
+                    console.log("An error has occured. Check that your inputs were valid and that your username and password were inputted correctly")
                     console.log(err)
                 }
-                else{
+                else{// log and close connection
+                    console.log(" ")
                     console.table(result)
+                    console.log("Operation Successful.")
                     connection.end()
                 }
             })
         }
+
         let restart = function(){
             inquirer.prompt(InitialQuestion).then(function(data){
                 switch(data.action){
                     case "View Departments":
-                        SQLQuery("select * FROM department")
-                        restart()
-    
+                        SQLStaticQuery("select * FROM department")
+                        QueryTimer().then(()=>{
+                            console.log(" ")
+                            restart()
+                        })
                     break;
     
                     case "View Roles":
-                        SQLQuery("select * FROM roles")
-                        restart()
-                        
+                        SQLStaticQuery("select * FROM roles")
+                        QueryTimer().then(()=>{
+                            console.log(" ")
+                            restart()
+                        })
                     break;
     
                     case "View Employees":
-                        SQLQuery("select * FROM employees")
-                        restart()
+                        SQLStaticQuery("select * FROM employees")
+                        QueryTimer().then(()=>{
+                            console.log(" ")
+                            restart()
+                        })
                     break;
     
                     case "Add a Department":
                         inquirer.prompt(addDepartmentQuestions).then(function(data){
-                            SQLQuery(tString`insert into department VALUES(${data.id}, ${data.department});`)
+                            SQLQuery("insert into department VALUES(?,?);", [data.id, data.values])
                             restart()
                         });
                     break;
@@ -157,21 +200,31 @@ let init = function(){
                     case "Add a Role":
                             
                         inquirer.prompt(addRoleQuestions).then(function(data){
-                            SQLQuery(tString`select id from department where name = '${data.depName}' into @departmentVar; insert into roles VALUES('${data.id}', '${data.title}', '${data.salary}', @departmentVar)`)
-                            restart()
+                            SQLQuery("select id into @departmentVar from department where name = ? limit 1; insert into roles VALUES(?,?,?, @departmentVar);", [data.department, data.id, data.title, data.salary])
+                            QueryTimer().then(()=>{
+                                console.log(" ")
+                                restart()
+                            })
                         });
                     break;
     
                     case "Add an Employee":
                         inquirer.prompt(addEmployeeQuestions).then(function(data){
-                            SQLQuery(tString`select id from roles where name = '${data.role}' into @rolesVar; insert into employees VALUES(${data.id}, '${data.first}', '${data.last}', @rolesVar,  '${data.manager}' );`)
-                            restart()
+                            SQLQuery("select id into @rolesVar from roles where title = ? limit 1; insert into employees VALUES(?, ?, ?, @rolesVar, ?);", [data.role, data.id, data.first, data.last, data.manager])
+                            QueryTimer().then(()=>{
+                                console.log(" ")
+                                restart()
+                            })
                         });
                     break;
     
                     case "Update an Employee's Role":
                         inquirer.prompt(UpdateEmployeeRole).then(function(data){
-                            
+                            SQLQuery("update employees set role_id = ? where id = ?;", [data.role, data.id])
+                            QueryTimer().then(()=>{
+                                console.log(" ")
+                                restart()
+                            })
                         });
                     break;
                 }

@@ -1,5 +1,5 @@
 use company_db;
-insert into department (id,name) VALUES (1, 'Peacekeepers');
+insert into department (id,name) VALUES (1, 'Wizards');
 insert into department (id,name) VALUES (2, 'Sales');
 
 insert into roles (id, title, salary, department_id) VALUES (1, 'Mall Cop', 42000.00, 1);
