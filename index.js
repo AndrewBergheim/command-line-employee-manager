@@ -120,7 +120,8 @@ let init = function(){// runs initial prompt then starts main loop
             host: "localhost",
             user: data.username,
             password: data.password,
-            database: "company_db"
+            database: "company_db",
+            multipleStatements: true
         }
 
 
@@ -201,7 +202,7 @@ let init = function(){// runs initial prompt then starts main loop
                             
                         inquirer.prompt(addRoleQuestions).then(function(data){
                             console.log(data)
-                            SQLStaticQuery("select id into @departmentVar from department where depName = " + '"' +  data.department + '"' + " limit 1; insert into roles VALUES(" + data.id + ", " + '"' + data.title + '"' + ", " + data.salary + ", @departmentVar)")
+                            SQLStaticQuery("select id into @departmentVar from department where depName = " + '"' +  data.department + '"' + " limit 1; insert into roles VALUES(" + data.id + ", " + '"' + data.title + '"' + ", " + data.salary + ", @departmentVar);")
                             QueryTimer().then(()=>{
                                 console.log(" ")
                                 restart()
@@ -211,7 +212,8 @@ let init = function(){// runs initial prompt then starts main loop
     
                     case "Add an Employee":
                         inquirer.prompt(addEmployeeQuestions).then(function(data){
-                            SQLStaticQuery("select id into @rolesVar from roles where title = " +  '"' + data.role + '"' + " limit 1; insert into employees VALUES( " + data.id + ', "'+ data.first + '", "' + data.last + '", @rolesVar, ' + data.manager + ")")
+                            let queryString = "select id into @rolesVar from roles where title = " +  '"' + data.role + '"' + " limit 1; insert into employees VALUES( " + data.id + ', "'+ data.first + '", "' + data.last + '", @rolesVar, ' + data.manager + ");"
+                            SQLStaticQuery(queryString)
                             QueryTimer().then(()=>{
                                 console.log(" ")
                                 restart()
