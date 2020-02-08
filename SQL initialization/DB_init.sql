@@ -3,7 +3,7 @@ create database if not exists company_db;
 use company_db;
 create table department(
     id int PRIMARY KEY,
-    name VARCHAR(30)
+    depName VARCHAR(30)
 );
 
 create table roles (

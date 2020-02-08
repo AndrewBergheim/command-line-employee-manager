@@ -192,7 +192,7 @@ let init = function(){// runs initial prompt then starts main loop
     
                     case "Add a Department":
                         inquirer.prompt(addDepartmentQuestions).then(function(data){
-                            SQLQuery("insert into department VALUES(?,?);", [data.id, data.values])
+                            SQLQuery("insert into department VALUES(?,?);", [data.id, data.department])
                             restart()
                         });
                     break;
@@ -200,7 +200,8 @@ let init = function(){// runs initial prompt then starts main loop
                     case "Add a Role":
                             
                         inquirer.prompt(addRoleQuestions).then(function(data){
-                            SQLQuery("select id into @departmentVar from department where name = ? limit 1; insert into roles VALUES(?,?,?, @departmentVar);", [data.department, data.id, data.title, data.salary])
+                            console.log(data)
+                            SQLStaticQuery("select id into @departmentVar from department where depName = " + '"' +  data.department + '"' + " limit 1; insert into roles VALUES(" + data.id + ", " + '"' + data.title + '"' + ", " + data.salary + ", @departmentVar)")
                             QueryTimer().then(()=>{
                                 console.log(" ")
                                 restart()
@@ -210,7 +211,7 @@ let init = function(){// runs initial prompt then starts main loop
     
                     case "Add an Employee":
                         inquirer.prompt(addEmployeeQuestions).then(function(data){
-                            SQLQuery("select id into @rolesVar from roles where title = ? limit 1; insert into employees VALUES(?, ?, ?, @rolesVar, ?);", [data.role, data.id, data.first, data.last, data.manager])
+                            SQLStaticQuery("select id into @rolesVar from roles where title = " +  '"' + data.role + '"' + " limit 1; insert into employees VALUES( " + data.id + ', "'+ data.first + '", "' + data.last + '", @rolesVar, ' + data.manager + ")")
                             QueryTimer().then(()=>{
                                 console.log(" ")
                                 restart()
