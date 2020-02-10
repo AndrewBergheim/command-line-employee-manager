@@ -1,7 +1,7 @@
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require("mysql");
-let tString = require("sql-template-strings")
+//let tString = require("sql-template-strings")
 
 let username;
 let password;
